@@ -143,6 +143,24 @@ function CourseDetail() {
         </div>
       </section>
 
+      {/* Gallery */}
+      {course.gallery.length > 0 && (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4">
+            <h2 className="text-2xl md:text-3xl font-bold">Inside the program</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Studio setup, live classes, certificates and more.</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {course.gallery.map((src: string, i: number) => (
+                <div key={i} className="group relative aspect-video rounded-2xl overflow-hidden glass-strong">
+                  <img src={src} alt={`${course.title} gallery ${i + 1}`} loading="lazy" width={1280} height={720}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Tools */}
       <section className="py-8">
         <div className="mx-auto max-w-7xl px-4">
