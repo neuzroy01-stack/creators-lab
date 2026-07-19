@@ -114,8 +114,8 @@
     letter-spacing: -0.02em;
   }
   ::selection {
-    background: oklch(0.82 0.17 70 / 0.4);
-    color: oklch(0.16 0.02 260);
+    background: rgba(79,124,255,0.4);
+    color: #ffffff;
   }
 }
 
