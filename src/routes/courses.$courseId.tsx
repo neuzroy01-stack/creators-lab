@@ -127,7 +127,7 @@ function CourseDetail() {
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-3xl md:text-4xl font-bold">What you'll learn</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {course.outcomes.map((o) => (
+            {course.outcomes.map((o: string) => (
               <div key={o} className="flex items-start gap-3 rounded-2xl glass p-5">
                 <div className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full"
                   style={{ background: "var(--gradient-neon)" }}>
@@ -145,7 +145,7 @@ function CourseDetail() {
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-2xl md:text-3xl font-bold">Tools covered</h2>
           <div className="mt-5 flex flex-wrap gap-2">
-            {course.tools.map((t) => (
+            {course.tools.map((t: string) => (
               <span key={t} className="rounded-full glass-strong px-4 py-2 text-sm">{t}</span>
             ))}
           </div>
@@ -157,7 +157,7 @@ function CourseDetail() {
         <div className="mx-auto max-w-4xl px-4">
           <h2 className="text-3xl md:text-4xl font-bold">Complete syllabus</h2>
           <div className="mt-8 space-y-3">
-            {course.syllabus.map((s, i) => (
+            {course.syllabus.map((s: {week: string; topics: string[]}, i: number) => (
               <div key={s.week} className="rounded-2xl glass-strong p-6 flex gap-5">
                 <div className="hidden md:grid place-items-center h-12 w-12 rounded-xl text-white font-bold shrink-0"
                   style={{ background: "var(--gradient-brand)" }}>
@@ -166,7 +166,7 @@ function CourseDetail() {
                 <div>
                   <div className="text-sm font-semibold text-neon">{s.week}</div>
                   <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                    {s.topics.map((t) => (
+                    {s.topics.map((t: string) => (
                       <li key={t} className="flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-neon" /> {t}
                       </li>
