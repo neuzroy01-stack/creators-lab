@@ -78,9 +78,12 @@ function CourseDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="lg:sticky lg:top-28 rounded-3xl glass-strong p-6 shadow-card"
           >
-            <div className="aspect-video rounded-2xl bg-black/40 grid place-items-center mb-5 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-60" style={{ background: "var(--gradient-brand)" }} />
-              <Play className="relative h-12 w-12 text-white fill-current" />
+            <div className="aspect-video rounded-2xl overflow-hidden mb-5 relative">
+              <img src={course.thumbnail} alt={course.title} width={1280} height={720}
+                className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-black/30 grid place-items-center">
+                <Play className="h-12 w-12 text-white fill-current drop-shadow-lg" />
+              </div>
             </div>
             <div className="flex items-baseline gap-3">
               <div className="text-4xl font-bold">₹{course.price.toLocaleString()}</div>
