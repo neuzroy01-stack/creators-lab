@@ -179,11 +179,12 @@
   border: 1px solid transparent;
 }
 
-/* Golden hover glow — pair with `group` on parent for group-hover */
+/* Premium hover glow — thin blue border + soft glow */
 @utility hover-glow-gold {
-  transition: box-shadow 300ms ease, transform 300ms ease;
+  transition: box-shadow 300ms ease-in-out, transform 300ms ease-in-out;
   &:hover {
-    box-shadow: 0 0 0 1px oklch(0.85 0.16 85 / 0.45), 0 20px 60px -20px oklch(0.85 0.16 85 / 0.4);
+    transform: translateY(-6px);
+    box-shadow: 0 0 0 1px rgba(79,124,255,0.45), 0 20px 60px -10px rgba(79,124,255,0.35);
   }
 }
 
@@ -192,9 +193,9 @@
   50% { transform: translateY(-18px) rotate(3deg); }
 }
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 oklch(0.85 0.16 85 / 0.55); }
-  70% { box-shadow: 0 0 0 18px oklch(0.85 0.16 85 / 0); }
-  100% { box-shadow: 0 0 0 0 oklch(0.85 0.16 85 / 0); }
+  0% { box-shadow: 0 0 0 0 rgba(79,124,255,0.55); }
+  70% { box-shadow: 0 0 0 18px rgba(79,124,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(79,124,255,0); }
 }
 @keyframes shine {
   0% { background-position: -200% 0; }
