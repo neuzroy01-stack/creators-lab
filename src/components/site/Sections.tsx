@@ -91,63 +91,83 @@ export function CoursesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, delay: i * 0.06 }}
-              className="group relative rounded-3xl glass-strong p-6 flex flex-col overflow-hidden"
+              className="group relative rounded-3xl glass-strong flex flex-col overflow-hidden hover:-translate-y-1 transition-transform"
             >
-              {c.badge && (
-                <div className="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
-                  style={{ background: "var(--gradient-brand)" }}>
-                  {c.badge}
+              {/* Thumbnail */}
+              <div className="relative aspect-video overflow-hidden">
+                <img
+                  src={c.thumbnail}
+                  alt={c.title}
+                  loading="lazy"
+                  width={1280}
+                  height={720}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {c.badge && (
+                  <div className="absolute top-3 right-3 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                    style={{ background: "var(--gradient-brand)" }}>
+                    {c.badge}
+                  </div>
+                )}
+                <div className="absolute bottom-3 left-3 text-[10px] font-semibold uppercase tracking-wider text-white/90 glass rounded-full px-2.5 py-1">
+                  {c.status === "coming-soon" ? "Coming Soon" : "Live Program"}
                 </div>
-              )}
-              <div className="text-xs text-neon font-semibold uppercase tracking-wider">
-                {c.status === "coming-soon" ? "Coming Soon" : "Live Program"}
               </div>
-              <h3 className="mt-2 text-xl font-bold leading-tight">{c.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground min-h-[2.5rem]">{c.tagline}</p>
 
-              {c.status === "live" ? (
-                <>
-                  <div className="mt-5 flex items-baseline gap-2">
-                    <div className="text-3xl font-bold">₹{c.price.toLocaleString()}</div>
-                    {c.originalPrice && (
-                      <div className="text-sm text-muted-foreground line-through">₹{c.originalPrice.toLocaleString()}</div>
-                    )}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {c.duration} · {c.support}
-                  </div>
-                  {c.seatsLeft && (
-                    <div className="mt-3 inline-flex items-center gap-2 text-xs">
-                      <span className="h-2 w-2 rounded-full bg-brand animate-pulse" />
-                      Only {c.seatsLeft} seats left in this batch
+              <div className="p-6 flex-1 flex flex-col">
+                <h3 className="text-lg md:text-xl font-bold leading-tight">{c.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground min-h-[2.5rem]">{c.tagline}</p>
+
+                {c.status === "live" ? (
+                  <>
+                    <div className="mt-4 flex items-baseline gap-2">
+                      <div className="text-2xl md:text-3xl font-bold text-gradient-gold">₹{c.price.toLocaleString()}</div>
+                      {c.originalPrice && (
+                        <div className="text-sm text-muted-foreground line-through">₹{c.originalPrice.toLocaleString()}</div>
+                      )}
                     </div>
-                  )}
-                  <div className="mt-6 flex gap-2">
-                    <Link
-                      to="/courses/$courseId"
-                      params={{ courseId: c.id }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold glass hover:bg-white/10 transition"
-                    >
-                      View Details
-                    </Link>
-                    <Link
-                      to="/enroll/$courseId"
-                      params={{ courseId: c.id }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand"
-                      style={{ background: "var(--gradient-brand)" }}
-                    >
-                      Enroll <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {c.duration} · {c.support}
+                    </div>
+                    {c.seatsLeft && (
+                      <div className="mt-3 inline-flex items-center gap-2 text-xs">
+                        <span className="h-2 w-2 rounded-full bg-brand animate-pulse" />
+                        Only {c.seatsLeft} seats left · Next batch starts soon
+                      </div>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+                      {["Live Classes", "MS Teams", "Recorded Videos", "Certificate"].map((t) => (
+                        <span key={t} className="rounded-full glass px-2 py-1 text-muted-foreground">{t}</span>
+                      ))}
+                    </div>
+                    <div className="mt-5 flex gap-2">
+                      <Link
+                        to="/courses/$courseId"
+                        params={{ courseId: c.id }}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold glass hover:bg-white/10 transition"
+                      >
+                        View Details
+                      </Link>
+                      <Link
+                        to="/enroll/$courseId"
+                        params={{ courseId: c.id }}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand"
+                        style={{ background: "var(--gradient-brand)" }}
+                      >
+                        Enroll <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-auto pt-6">
+                    <div className="text-sm text-muted-foreground">Notify me when it launches</div>
+                    <button className="mt-3 w-full rounded-xl glass px-4 py-2.5 text-sm font-semibold opacity-70 cursor-not-allowed">
+                      Coming Soon
+                    </button>
                   </div>
-                </>
-              ) : (
-                <div className="mt-auto pt-8">
-                  <div className="text-sm text-muted-foreground">Notify me when it launches</div>
-                  <button className="mt-3 w-full rounded-xl glass px-4 py-2.5 text-sm font-semibold opacity-70 cursor-not-allowed">
-                    Coming Soon
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition"
                 style={{ background: c.status === "live" ? "var(--gradient-brand)" : "var(--gradient-neon)" }} />
@@ -158,6 +178,7 @@ export function CoursesSection() {
     </section>
   );
 }
+
 
 export function DemoVideosSection() {
   return (

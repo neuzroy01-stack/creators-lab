@@ -78,9 +78,12 @@ function CourseDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="lg:sticky lg:top-28 rounded-3xl glass-strong p-6 shadow-card"
           >
-            <div className="aspect-video rounded-2xl bg-black/40 grid place-items-center mb-5 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-60" style={{ background: "var(--gradient-brand)" }} />
-              <Play className="relative h-12 w-12 text-white fill-current" />
+            <div className="aspect-video rounded-2xl overflow-hidden mb-5 relative">
+              <img src={course.thumbnail} alt={course.title} width={1280} height={720}
+                className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-black/30 grid place-items-center">
+                <Play className="h-12 w-12 text-white fill-current drop-shadow-lg" />
+              </div>
             </div>
             <div className="flex items-baseline gap-3">
               <div className="text-4xl font-bold">₹{course.price.toLocaleString()}</div>
@@ -139,6 +142,24 @@ function CourseDetail() {
           </div>
         </div>
       </section>
+
+      {/* Gallery */}
+      {course.gallery.length > 0 && (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4">
+            <h2 className="text-2xl md:text-3xl font-bold">Inside the program</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Studio setup, live classes, certificates and more.</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {course.gallery.map((src: string, i: number) => (
+                <div key={i} className="group relative aspect-video rounded-2xl overflow-hidden glass-strong">
+                  <img src={src} alt={`${course.title} gallery ${i + 1}`} loading="lazy" width={1280} height={720}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Tools */}
       <section className="py-8">
