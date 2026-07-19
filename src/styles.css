@@ -141,6 +141,13 @@
   color: transparent;
 }
 
+@utility text-gradient-gold {
+  background: linear-gradient(135deg, oklch(0.9 0.14 90), oklch(0.75 0.17 65));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 @utility shadow-glow {
   box-shadow: var(--shadow-glow);
 }
