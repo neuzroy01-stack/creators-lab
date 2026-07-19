@@ -91,86 +91,102 @@ export function CoursesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, delay: i * 0.06 }}
-              className="group relative rounded-3xl glass-strong flex flex-col overflow-hidden hover:-translate-y-1 transition-transform"
+              className="group relative rounded-3xl p-[1.5px] transition-transform duration-500 hover:-translate-y-2"
+              style={{ background: "var(--gradient-brand)" }}
             >
-              {/* Thumbnail */}
-              <div className="relative aspect-video overflow-hidden">
-                <img
-                  src={c.thumbnail}
-                  alt={c.title}
-                  loading="lazy"
-                  width={1280}
-                  height={720}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                {c.badge && (
-                  <div className="absolute top-3 right-3 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
-                    style={{ background: "var(--gradient-brand)" }}>
-                    {c.badge}
-                  </div>
-                )}
-                <div className="absolute bottom-3 left-3 text-[10px] font-semibold uppercase tracking-wider text-white/90 glass rounded-full px-2.5 py-1">
-                  {c.status === "coming-soon" ? "Coming Soon" : "Live Program"}
-                </div>
-              </div>
+              <div className="relative rounded-[calc(1.5rem-1.5px)] bg-card flex flex-col overflow-hidden h-full hover-glow-gold">
+                <div className="relative aspect-video overflow-hidden">
+                  <img
+                    src={c.thumbnail}
+                    alt={c.title}
+                    loading="lazy"
+                    width={1280}
+                    height={720}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
 
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-lg md:text-xl font-bold leading-tight">{c.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground min-h-[2.5rem]">{c.tagline}</p>
+                  {c.status === "live" && (
+                    <div className="absolute top-3 left-3 glass-strong rounded-full px-2.5 py-1 text-[10px] font-semibold text-white">
+                      ⏱ {c.duration}
+                    </div>
+                  )}
 
-                {c.status === "live" ? (
-                  <>
-                    <div className="mt-4 flex items-baseline gap-2">
-                      <div className="text-2xl md:text-3xl font-bold text-gradient-gold">₹{c.price.toLocaleString()}</div>
-                      {c.originalPrice && (
-                        <div className="text-sm text-muted-foreground line-through">₹{c.originalPrice.toLocaleString()}</div>
-                      )}
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {c.duration} · {c.support}
-                    </div>
-                    {c.seatsLeft && (
-                      <div className="mt-3 inline-flex items-center gap-2 text-xs">
-                        <span className="h-2 w-2 rounded-full bg-brand animate-pulse" />
-                        Only {c.seatsLeft} seats left · Next batch starts soon
+                  <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+                    {c.badge && (
+                      <div className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-brand"
+                        style={{ background: "var(--gradient-brand)" }}>
+                        {c.badge}
                       </div>
                     )}
-                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
-                      {["Live Classes", "MS Teams", "Recorded Videos", "Certificate"].map((t) => (
-                        <span key={t} className="rounded-full glass px-2 py-1 text-muted-foreground">{t}</span>
-                      ))}
-                    </div>
-                    <div className="mt-5 flex gap-2">
-                      <Link
-                        to="/courses/$courseId"
-                        params={{ courseId: c.id }}
-                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold glass hover:bg-white/10 transition"
-                      >
-                        View Details
-                      </Link>
-                      <Link
-                        to="/enroll/$courseId"
-                        params={{ courseId: c.id }}
-                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand"
-                        style={{ background: "var(--gradient-brand)" }}
-                      >
-                        Enroll <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  <div className="mt-auto pt-6">
-                    <div className="text-sm text-muted-foreground">Notify me when it launches</div>
-                    <button className="mt-3 w-full rounded-xl glass px-4 py-2.5 text-sm font-semibold opacity-70 cursor-not-allowed">
-                      Coming Soon
-                    </button>
+                    {c.status === "coming-soon" && (
+                      <div className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider"
+                        style={{ background: "var(--gradient-gold)", color: "oklch(0.16 0.02 260)" }}>
+                        New Soon
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition"
-                style={{ background: c.status === "live" ? "var(--gradient-brand)" : "var(--gradient-neon)" }} />
+                  <div className="absolute bottom-3 left-3 text-[10px] font-semibold uppercase tracking-wider text-white/95 glass rounded-full px-2.5 py-1">
+                    {c.status === "coming-soon" ? "Coming Soon" : "● Live Program"}
+                  </div>
+                </div>
+
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-lg md:text-xl font-bold leading-tight">{c.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground min-h-[2.5rem]">{c.tagline}</p>
+
+                  {c.status === "live" ? (
+                    <>
+                      <div className="mt-4 flex items-baseline gap-2">
+                        <div className="text-2xl md:text-3xl font-bold text-gradient-gold">₹{c.price.toLocaleString()}</div>
+                        {c.originalPrice && (
+                          <div className="text-sm text-muted-foreground line-through">₹{c.originalPrice.toLocaleString()}</div>
+                        )}
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">{c.support}</div>
+                      {c.seatsLeft && (
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs w-fit">
+                          <span className="h-2 w-2 rounded-full bg-brand animate-pulse" />
+                          Only {c.seatsLeft} seats left
+                        </div>
+                      )}
+                      <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+                        {["Live Classes", "MS Teams", "Recorded", "Certificate"].map((t) => (
+                          <span key={t} className="rounded-full glass px-2 py-1 text-muted-foreground">{t}</span>
+                        ))}
+                      </div>
+                      <div className="mt-5 flex gap-2">
+                        <Link
+                          to="/courses/$courseId"
+                          params={{ courseId: c.id }}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold glass hover:bg-white/10 transition"
+                        >
+                          View Details
+                        </Link>
+                        <Link
+                          to="/enroll/$courseId"
+                          params={{ courseId: c.id }}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition-transform hover:scale-[1.03]"
+                          style={{ background: "var(--gradient-brand)" }}
+                        >
+                          Enroll <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-auto pt-6">
+                      <div className="text-sm text-muted-foreground">Notify me when it launches</div>
+                      <button className="mt-3 w-full rounded-xl glass px-4 py-2.5 text-sm font-semibold opacity-70 cursor-not-allowed">
+                        Coming Soon
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full blur-3xl opacity-20 group-hover:opacity-50 transition-opacity duration-500"
+                  style={{ background: c.status === "live" ? "var(--gradient-brand)" : "var(--gradient-gold)" }} />
+              </div>
             </motion.div>
           ))}
         </div>
