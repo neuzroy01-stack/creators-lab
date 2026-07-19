@@ -1,15 +1,32 @@
 // Central mock data source. Admin panel would edit these via Cloud later.
+import courseYtAi from "@/assets/course-yt-ai.jpg";
+import courseMonetization from "@/assets/course-monetization.jpg";
+import courseShorts from "@/assets/course-shorts.jpg";
+import coursePlaceholder from "@/assets/course-placeholder.jpg";
+import galleryStudio from "@/assets/gallery-studio.jpg";
+import galleryClass from "@/assets/gallery-class.jpg";
+import galleryCertificate from "@/assets/gallery-certificate.jpg";
 
 export const SITE = {
-  name: "YouTube AI Creator Academy",
-  short: "YT AI Academy",
+  name: "Creator Lab",
+  short: "Creator Lab",
   tagline: "Learn YouTube & Generative AI From Beginner To Professional",
   whatsappNumber: "916353504505",
   whatsappMessage:
-    "Hello! I want to know more about the YouTube AI Creator Academy courses.",
-  supportEmail: "support@ytaiacademy.in",
+    "Hello! I want to know more about Creator Lab courses.",
+  supportEmail: "support@creatorlab.in",
   supportPhone: "+91 63535 04505",
-  upiId: "ytaiacademy@upi",
+  upiId: "creatorlab@upi",
+};
+
+export const IMAGES = {
+  courseYtAi,
+  courseMonetization,
+  courseShorts,
+  coursePlaceholder,
+  galleryStudio,
+  galleryClass,
+  galleryCertificate,
 };
 
 export type Course = {
@@ -24,6 +41,8 @@ export type Course = {
   seatsLeft?: number;
   badge?: string;
   overview: string;
+  thumbnail: string;
+  gallery: string[];
   outcomes: string[];
   tools: string[];
   syllabus: { week: string; topics: string[] }[];
@@ -43,6 +62,8 @@ export const COURSES: Course[] = [
     status: "live",
     seatsLeft: 12,
     badge: "Most Popular",
+    thumbnail: courseYtAi,
+    gallery: [galleryStudio, galleryClass, galleryCertificate],
     overview:
       "Master YouTube channel building, AI content creation, editing, SEO, branding, and monetization with live mentorship on Microsoft Teams and lifetime community access.",
     outcomes: [
@@ -78,6 +99,8 @@ export const COURSES: Course[] = [
     status: "live",
     seatsLeft: 5,
     badge: "Premium",
+    thumbnail: courseMonetization,
+    gallery: [galleryClass, galleryCertificate, galleryStudio],
     overview:
       "A hands-on mentorship program for creators who want to scale beyond ₹1L/month with brand deals, digital products and multi-channel strategies.",
     outcomes: [
@@ -104,6 +127,8 @@ export const COURSES: Course[] = [
     duration: "TBA",
     support: "TBA",
     status: "coming-soon",
+    thumbnail: courseShorts,
+    gallery: [],
     overview: "",
     outcomes: [],
     tools: [],
@@ -119,6 +144,8 @@ export const COURSES: Course[] = [
     duration: "TBA",
     support: "TBA",
     status: "coming-soon",
+    thumbnail: coursePlaceholder,
+    gallery: [],
     overview: "",
     outcomes: [],
     tools: [],
@@ -134,12 +161,76 @@ export const COURSES: Course[] = [
     duration: "TBA",
     support: "TBA",
     status: "coming-soon",
+    thumbnail: coursePlaceholder,
+    gallery: [],
     overview: "",
     outcomes: [],
     tools: [],
     syllabus: [],
     schedule: "",
     batchStart: "",
+  },
+];
+
+// Banner slides for homepage carousel. Admin can replace placeholders later.
+export type Banner = {
+  id: string;
+  courseId?: string; // click leads to /courses/:id if set
+  image: string;
+  title: string;
+  description: string;
+  price?: string;
+  seatsBadge?: string;
+  ctaLabel: string;
+  isPlaceholder?: boolean;
+};
+
+export const BANNERS: Banner[] = [
+  {
+    id: "b1",
+    courseId: "yt-ai-master",
+    image: courseYtAi,
+    title: "YouTube AI Creator Master Program",
+    description: "Beginner-to-pro system with live mentorship, AI tools & monetization.",
+    price: "₹9,999",
+    seatsBadge: "Only 12 Seats Left",
+    ctaLabel: "Enroll Now",
+  },
+  {
+    id: "b2",
+    courseId: "premium-monetization",
+    image: courseMonetization,
+    title: "Premium Monetization Mentorship",
+    description: "1-on-1 weekly mentor calls. Scale beyond ₹1L/month.",
+    price: "₹24,999",
+    seatsBadge: "Only 5 Seats Left",
+    ctaLabel: "Enroll Now",
+  },
+  {
+    id: "b3",
+    courseId: "shorts-pro",
+    image: courseShorts,
+    title: "AI Shorts & Reels Pro",
+    description: "Go viral on Shorts & Reels using AI. Batch launching soon.",
+    price: "Coming Soon",
+    seatsBadge: "Join Waitlist",
+    ctaLabel: "Notify Me",
+  },
+  {
+    id: "b4",
+    image: coursePlaceholder,
+    title: "Your Next Course Here",
+    description: "Placeholder banner — admin can replace with any new course.",
+    ctaLabel: "Coming Soon",
+    isPlaceholder: true,
+  },
+  {
+    id: "b5",
+    image: coursePlaceholder,
+    title: "Your Next Course Here",
+    description: "Placeholder banner — admin can replace with any new course.",
+    ctaLabel: "Coming Soon",
+    isPlaceholder: true,
   },
 ];
 
