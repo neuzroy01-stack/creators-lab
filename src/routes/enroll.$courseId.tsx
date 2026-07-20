@@ -66,7 +66,10 @@ function EnrollPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(INIT);
-  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const submit = useServerFn(submitRegistration);
 
   const discount = COUPONS[form.couponCode.toUpperCase()] ?? 0;
   const discountAmt = Math.round((course.price * discount) / 100);
@@ -84,12 +87,59 @@ function EnrollPage() {
     return true;
   };
 
-  const onSubmit = () => {
-    const code = `YT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")}`;
-    navigate({
-      to: "/success",
-      search: { code, course: course.title, name: form.fullName },
-    });
+  const onSubmit = async () => {
+    if (submitting) return;
+    if (form.transactionId.trim().length < 6) {
+      toast.error("Please enter a valid transaction ID (UTR).");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      let screenshotPath: string | null = null;
+      if (screenshotFile) {
+        const ext = screenshotFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const safeMobile = form.mobile.replace(/\D/g, "").slice(-10) || "anon";
+        const path = `${new Date().getFullYear()}/${course.id}/${safeMobile}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("payment-proofs")
+          .upload(path, screenshotFile, { upsert: false, contentType: screenshotFile.type });
+        if (upErr) {
+          toast.error("Could not upload screenshot. Please try again.");
+          setSubmitting(false);
+          return;
+        }
+        screenshotPath = path;
+      }
+
+      const result = await submit({
+        data: {
+          fullName: form.fullName.trim(),
+          mobile: form.mobile.trim(),
+          email: form.email.trim(),
+          courseId: course.id,
+          courseTitle: course.title,
+          amount: finalAmt,
+          utr: form.transactionId.trim(),
+          screenshotPath,
+          remarks: form.comments?.trim() || null,
+        },
+      });
+
+      if (!result.ok) {
+        toast.error(result.message ?? "Something went wrong.");
+        setSubmitting(false);
+        return;
+      }
+      toast.success("Registration submitted!");
+      navigate({
+        to: "/success",
+        search: { code: result.code, course: course.title, name: form.fullName },
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Please try again.");
+      setSubmitting(false);
+    }
   };
 
   return (
