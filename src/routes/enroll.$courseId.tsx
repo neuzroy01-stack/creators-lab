@@ -570,7 +570,7 @@ function StepCourse({ form, set, errors, touched, onBlur, courseName }: StepProp
           <TextInput
             value={form.couponCode}
             onChange={(e) => set("couponCode", e.target.value.toUpperCase())}
-            placeholder="e.g. LAUNCH20"
+            placeholder="Have a coupon? Enter it here"
           />
         </Field>
         <Field label="Comments" span={2}>
@@ -657,18 +657,25 @@ function StepPayment({
       <p className="mt-1 text-sm text-muted-foreground">Scan the QR with any UPI app to pay.</p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-        {/* QR + amount */}
-        <div className="rounded-2xl glass p-6 text-center">
-          <div className="relative mx-auto w-56 h-56 rounded-2xl overflow-hidden shadow-brand" style={{ background: "white" }}>
+        {/* QR + amount — premium square payment card */}
+        <div className="rounded-xl glass-strong border border-white/10 shadow-2xl p-6 md:p-8 flex flex-col items-center">
+          <div className="text-xs uppercase tracking-widest text-neon mb-1">Scan to Pay</div>
+          <div className="text-sm text-muted-foreground mb-6">Any UPI app works</div>
+
+          {/* Square QR card with equal spacing */}
+          <div className="relative w-60 h-60 md:w-64 md:h-64 rounded-lg overflow-hidden shadow-xl ring-1 ring-black/10 bg-white p-3">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(upiUrl)}`}
               alt="UPI QR"
-              className="h-full w-full"
+              className="h-full w-full object-contain"
             />
           </div>
-          <div className="mt-4 text-xs text-muted-foreground">Scan with GPay / PhonePe / Paytm</div>
-          <div className="mt-4 flex items-center gap-2 justify-center">
-            <div className="rounded-lg glass-strong px-3 py-2 text-sm font-mono">{SITE.upiId}</div>
+
+          <div className="mt-6 text-2xl font-bold">₹{finalAmt.toLocaleString()}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Scan with GPay / PhonePe / Paytm / BHIM</div>
+
+          <div className="mt-5 flex items-center gap-2">
+            <div className="rounded-lg glass px-3 py-2 text-sm font-mono">{SITE.upiId}</div>
             <button
               onClick={() => { navigator.clipboard.writeText(SITE.upiId); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
               className="rounded-lg glass px-3 py-2 text-xs inline-flex items-center gap-1 hover:bg-white/10 transition"
