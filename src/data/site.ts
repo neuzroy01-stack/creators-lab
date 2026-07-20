@@ -1,8 +1,8 @@
 // Central data source.
-import courseYtAi from "@/assets/AI_learning_platform_hero_banner_202607192308.jpeg";
-import courseMonetization from "@/assets/WhatsApp_Image_2026-07-20_at_6.34.08_AM.jpeg";
-import courseShorts from "@/assets/WhatsApp_Image_2026-07-20_at_6.34.08_AM_(1).jpeg";
-import courseGenerativeAi from "@/assets/Complete_YouTube_Master_Course_2K_202607200852.jpeg";
+import courseYtAi from "@/assets/WhatsApp_Image_2026-07-20_at_6.34.08_AM.jpeg";
+import courseMonetization from "@/assets/Complete_YouTube_Master_Course_2K_202607200852.jpeg";
+import courseAiVideo from "@/assets/AI_learning_platform_hero_banner_202607192308.jpeg";
+import courseGenerativeAi from "@/assets/WhatsApp_Image_2026-07-20_at_6.34.08_AM_(1).jpeg";
 import coursePlaceholder from "@/assets/course-placeholder.jpg";
 import galleryStudio from "@/assets/gallery-studio.jpg";
 import galleryClass from "@/assets/gallery-class.jpg";
@@ -22,7 +22,7 @@ export const SITE = {
 export const IMAGES = {
   courseYtAi,
   courseMonetization,
-  courseShorts,
+  courseAiVideo,
   courseGenerativeAi,
   coursePlaceholder,
   galleryStudio,
@@ -194,7 +194,7 @@ export const COURSES: Course[] = [
     duration: "TBA",
     support: "TBA",
     status: "coming-soon",
-    thumbnail: courseShorts,
+    thumbnail: courseAiVideo,
     gallery: [],
     overview: "",
     outcomes: [],

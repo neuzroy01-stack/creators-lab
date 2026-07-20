@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -11,7 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import {
   adminListRegistrations, adminStats, adminUpdateStatus,
-  adminDeleteRegistration, adminGetProofUrl, currentUserRoles,
+  adminDeleteRegistration, adminGetProofUrl,
 } from "@/lib/registrations.functions";
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -44,14 +44,12 @@ type Registration = {
 const INACTIVITY_MS = 15 * 60 * 1000;
 
 function AdminDashboard() {
-  const navigate = useNavigate();
   const qc = useQueryClient();
   const list = useServerFn(adminListRegistrations);
   const stats = useServerFn(adminStats);
   const setStatus = useServerFn(adminUpdateStatus);
   const del = useServerFn(adminDeleteRegistration);
   const getProof = useServerFn(adminGetProofUrl);
-  const getRoles = useServerFn(currentUserRoles);
 
   const [authOk, setAuthOk] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
@@ -59,9 +57,11 @@ function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "verified" | "rejected">("all");
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Auth gate + inactivity logout
+  // Auth gate + inactivity logout — uses client-side session + RLS (no server fn)
   useEffect(() => {
     let logoutTimer: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
     const reset = () => {
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(async () => {
@@ -72,29 +72,43 @@ function AdminDashboard() {
     };
 
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) { window.location.replace("/admin"); return; }
       try {
-        const r = await getRoles();
-        if (r.roles.length === 0) {
+        // Wait for Supabase client to restore session from storage
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session?.user) {
+          window.location.replace("/admin");
+          return;
+        }
+
+        // Read roles directly via RLS ("Users can view their own roles" policy)
+        const { data: roleRows, error: roleErr } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", sessionData.session.user.id);
+
+        if (cancelled) return;
+
+        if (roleErr || !roleRows || roleRows.length === 0) {
           await supabase.auth.signOut();
           window.location.replace("/admin");
           return;
         }
-        setRoles(r.roles);
+
+        setRoles(roleRows.map((r) => r.role as string));
         setAuthOk(true);
         reset();
       } catch {
-        window.location.replace("/admin");
+        if (!cancelled) window.location.replace("/admin");
       }
     })();
 
     ["mousemove", "keydown", "click"].forEach((e) => window.addEventListener(e, reset));
     return () => {
+      cancelled = true;
       clearTimeout(logoutTimer);
       ["mousemove", "keydown", "click"].forEach((e) => window.removeEventListener(e, reset));
     };
-  }, [navigate, getRoles]);
+  }, []);
 
   const rowsQ = useQuery({
     enabled: authOk,

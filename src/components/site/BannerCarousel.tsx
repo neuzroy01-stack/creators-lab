@@ -57,9 +57,10 @@ export function BannerCarousel() {
           onMouseLeave={() => setPaused(false)}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          className="relative rounded-3xl overflow-hidden glass-strong"
+          className="relative rounded-3xl overflow-hidden glass-strong shadow-2xl"
         >
-          <div className="relative aspect-video w-full">
+          {/* Use 16/9 on desktop, shorter on mobile for better fit */}
+          <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-[21/9]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={current.id}
@@ -85,7 +86,7 @@ export function BannerCarousel() {
           </button>
 
           {/* Dots */}
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
             {BANNERS.map((_, i) => (
               <button
                 key={i}
@@ -102,47 +103,67 @@ export function BannerCarousel() {
 }
 
 function BannerSlide({ banner }: { banner: Banner }) {
+  const isComingSoon = banner.price === "Coming Soon";
   return (
     <div className="relative h-full w-full">
       <img
         src={banner.image}
         alt={banner.title}
         loading="lazy"
-        width={1280}
-        height={720}
         className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-      <div className="absolute inset-0 flex items-end md:items-center">
-        <div className="p-5 md:p-10 max-w-2xl">
+      {/* Gradient overlay — stronger at bottom for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/10" />
+
+      {/* Content anchored to bottom with proper padding */}
+      <div className="absolute inset-0 flex items-end">
+        <div className="w-full p-6 md:p-10 lg:p-14 max-w-2xl pb-10 md:pb-12">
           {banner.seatsBadge && (
-            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-white mb-3"
-              style={{ background: "var(--gradient-brand)" }}>
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider text-white mb-4 shadow-lg"
+              style={{ background: "var(--gradient-brand)" }}
+            >
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
               {banner.seatsBadge}
             </div>
           )}
-          <h3 className="text-xl md:text-4xl font-bold leading-tight text-white">{banner.title}</h3>
-          <p className="mt-2 md:mt-3 text-xs md:text-base text-white/80 max-w-lg">{banner.description}</p>
 
-          <div className="mt-4 md:mt-6 flex items-center gap-3 md:gap-5">
-            {banner.price && (
-              <div className="text-lg md:text-3xl font-bold text-gradient-gold">{banner.price}</div>
+          {isComingSoon && (
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 shadow-lg"
+              style={{ background: "var(--gradient-gold)", color: "oklch(0.16 0.02 260)" }}
+            >
+              Coming Soon
+            </div>
+          )}
+
+          <h3 className="text-xl md:text-3xl lg:text-4xl font-bold leading-tight text-white drop-shadow-lg">
+            {banner.title}
+          </h3>
+          <p className="mt-2 md:mt-3 text-xs md:text-base text-white/85 max-w-lg drop-shadow-md">
+            {banner.description}
+          </p>
+
+          <div className="mt-5 md:mt-7 flex items-center gap-3 md:gap-5">
+            {banner.price && !isComingSoon && (
+              <div className="text-lg md:text-3xl font-bold text-gradient-gold drop-shadow-lg">
+                {banner.price}
+              </div>
             )}
-            {banner.courseId && !banner.isPlaceholder ? (
+            {banner.courseId && !isComingSoon ? (
               <Link
                 to="/courses/$courseId"
                 params={{ courseId: banner.courseId }}
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 md:px-5 md:py-3 text-xs md:text-sm font-semibold text-white shadow-brand"
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 md:px-5 md:py-3 text-xs md:text-sm font-semibold text-white shadow-brand transition-transform hover:scale-[1.03]"
                 style={{ background: "var(--gradient-brand)" }}
               >
                 {banner.ctaLabel} <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
               </Link>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 md:px-5 md:py-3 text-xs md:text-sm font-semibold glass-strong text-white/80">
+            ) : isComingSoon ? (
+              <span className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 md:px-5 md:py-3 text-xs md:text-sm font-semibold glass-strong text-white/90 border border-white/20">
                 {banner.ctaLabel}
               </span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
