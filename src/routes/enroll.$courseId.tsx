@@ -380,14 +380,14 @@ function StepReview({
 }
 
 function StepPayment({
-  form, set, course, finalAmt, discount, discountAmt, screenshot, setScreenshot,
+  form, set, course, finalAmt, discount, discountAmt, screenshot, onFileSelected,
 }: {
   form: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   course: { title: string; price: number };
   finalAmt: number; discount: number; discountAmt: number;
   screenshot: string | null;
-  setScreenshot: (s: string | null) => void;
+  onFileSelected: (file: File | null, preview: string | null) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const upiUrl = `upi://pay?pa=${SITE.upiId}&pn=${encodeURIComponent(SITE.short)}&am=${finalAmt}&cu=INR`;
@@ -395,10 +395,15 @@ function StepPayment({
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File too large (max 5 MB).");
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = () => setScreenshot(reader.result as string);
+    reader.onload = () => onFileSelected(file, reader.result as string);
     reader.readAsDataURL(file);
   };
+
 
   return (
     <div>
