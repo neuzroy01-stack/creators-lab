@@ -117,6 +117,7 @@ function RootComponent() {
         <SiteFooter />
         <FloatingWhatsApp />
         <StickyMobileCTA />
+        <Toaster />
       </div>
     </QueryClientProvider>
   );
