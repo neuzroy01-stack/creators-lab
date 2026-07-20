@@ -377,19 +377,19 @@ export const DEMO_VIDEOS = [
     id: "d1",
     title: "How AI is changing YouTube in 2026",
     desc: "A quick walkthrough of the AI creator stack we teach.",
-    youtubeId: "dQw4w9WgXcQ",
+    youtubeId: "7y1n6A0A7VU",
   },
   {
     id: "d2",
     title: "Live class preview: Viral thumbnails",
     desc: "Watch a real 20-min excerpt from Week 5.",
-    youtubeId: "dQw4w9WgXcQ",
+    youtubeId: "AOtPuDqCU8M",
   },
   {
     id: "d3",
     title: "Student success: 0 to 100K in 6 months",
     desc: "Meet Ananya and her channel journey.",
-    youtubeId: "dQw4w9WgXcQ",
+    youtubeId: "er8zzms30kA",
   },
 ];
 
