@@ -112,13 +112,16 @@ export const adminUpdateStatus = createServerFn({ method: "POST" })
     if (!roles.some((r) => ["super_admin", "payment_manager"].includes(r))) {
       throw new Error("Forbidden: payment manager role required");
     }
-    const patch: Record<string, unknown> = { status: data.status };
-    if (data.remarks !== undefined) patch.remarks = data.remarks;
-    if (data.status === "verified") {
-      patch.verified_by = context.userId;
-      patch.verified_at = new Date().toISOString();
-    }
-    const { error } = await context.supabase.from("registrations").update(patch).eq("id", data.id);
+    const { error } = await context.supabase
+      .from("registrations")
+      .update({
+        status: data.status,
+        ...(data.remarks !== undefined ? { remarks: data.remarks } : {}),
+        ...(data.status === "verified"
+          ? { verified_by: context.userId, verified_at: new Date().toISOString() }
+          : {}),
+      })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
