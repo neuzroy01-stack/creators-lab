@@ -209,9 +209,7 @@ export function DemoVideosSection() {
           {DEMO_VIDEOS.map((v) => (
             <a
               key={v.id}
-              href={`https://youtu.be/7y1n6A0A7VU?si=C5opq75ffzPincE9{v.youtubeId}`}
-href={`https://youtu.be/AOtPuDqCU8M?si=yPizRfdQ6CJ7inhM{v.youtubeId}`}
-              href={`https://youtu.be/er8zzms30kA?si=CJL0mVF8BTeFVHdD{v.youtubeId}`}
+              href={`https://www.youtube.com/watch?v=${v.youtubeId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group rounded-2xl overflow-hidden glass-strong hover:scale-[1.02] transition-transform"
