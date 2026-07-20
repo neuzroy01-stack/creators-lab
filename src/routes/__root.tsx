@@ -15,6 +15,7 @@ import { SiteNav } from "@/components/site/SiteNav";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FloatingWhatsApp } from "@/components/site/FloatingWhatsApp";
 import { StickyMobileCTA } from "@/components/site/StickyMobileCTA";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -116,6 +117,7 @@ function RootComponent() {
         <SiteFooter />
         <FloatingWhatsApp />
         <StickyMobileCTA />
+        <Toaster />
       </div>
     </QueryClientProvider>
   );

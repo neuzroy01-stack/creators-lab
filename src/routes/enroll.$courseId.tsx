@@ -1,10 +1,14 @@
 import { createFileRoute, useNavigate, Link, notFound } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { COURSES, SITE } from "@/data/site";
+import { supabase } from "@/integrations/supabase/client";
+import { submitRegistration } from "@/lib/registrations.functions";
 import {
   ArrowLeft, ArrowRight, Check, Copy, Upload, User, GraduationCap,
-  BookOpen, ClipboardCheck, CreditCard,
+  BookOpen, ClipboardCheck, CreditCard, Loader2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/enroll/$courseId")({
@@ -62,7 +66,10 @@ function EnrollPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(INIT);
-  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const submit = useServerFn(submitRegistration);
 
   const discount = COUPONS[form.couponCode.toUpperCase()] ?? 0;
   const discountAmt = Math.round((course.price * discount) / 100);
@@ -80,12 +87,59 @@ function EnrollPage() {
     return true;
   };
 
-  const onSubmit = () => {
-    const code = `YT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")}`;
-    navigate({
-      to: "/success",
-      search: { code, course: course.title, name: form.fullName },
-    });
+  const onSubmit = async () => {
+    if (submitting) return;
+    if (form.transactionId.trim().length < 6) {
+      toast.error("Please enter a valid transaction ID (UTR).");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      let screenshotPath: string | null = null;
+      if (screenshotFile) {
+        const ext = screenshotFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const safeMobile = form.mobile.replace(/\D/g, "").slice(-10) || "anon";
+        const path = `${new Date().getFullYear()}/${course.id}/${safeMobile}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("payment-proofs")
+          .upload(path, screenshotFile, { upsert: false, contentType: screenshotFile.type });
+        if (upErr) {
+          toast.error("Could not upload screenshot. Please try again.");
+          setSubmitting(false);
+          return;
+        }
+        screenshotPath = path;
+      }
+
+      const result = await submit({
+        data: {
+          fullName: form.fullName.trim(),
+          mobile: form.mobile.trim(),
+          email: form.email.trim(),
+          courseId: course.id,
+          courseTitle: course.title,
+          amount: finalAmt,
+          utr: form.transactionId.trim(),
+          screenshotPath,
+          remarks: form.comments?.trim() || null,
+        },
+      });
+
+      if (!result.ok) {
+        toast.error(result.message ?? "Something went wrong.");
+        setSubmitting(false);
+        return;
+      }
+      toast.success("Registration submitted!");
+      navigate({
+        to: "/success",
+        search: { code: result.code, course: course.title, name: form.fullName },
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Please try again.");
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -146,8 +200,11 @@ function EnrollPage() {
                   finalAmt={finalAmt}
                   discount={discount}
                   discountAmt={discountAmt}
-                  screenshot={screenshot}
-                  setScreenshot={setScreenshot}
+                  screenshot={screenshotPreview}
+                  onFileSelected={(file, preview) => {
+                    setScreenshotFile(file);
+                    setScreenshotPreview(preview);
+                  }}
                 />
               )}
             </motion.div>
@@ -156,7 +213,7 @@ function EnrollPage() {
           <div className="mt-8 flex items-center justify-between gap-3">
             <button
               onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0}
+              disabled={step === 0 || submitting}
               className="rounded-xl glass px-5 py-3 text-sm font-semibold disabled:opacity-40"
             >
               ← Back
@@ -173,11 +230,11 @@ function EnrollPage() {
             ) : (
               <button
                 onClick={onSubmit}
-                disabled={!canNext()}
-                className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-brand disabled:opacity-40"
+                disabled={!canNext() || submitting}
+                className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-brand disabled:opacity-40 inline-flex items-center gap-2"
                 style={{ background: "var(--gradient-brand)" }}
               >
-                Submit Payment <Check className="inline h-4 w-4 ml-1" />
+                {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>) : (<>Submit Payment <Check className="h-4 w-4" /></>)}
               </button>
             )}
           </div>
@@ -323,14 +380,14 @@ function StepReview({
 }
 
 function StepPayment({
-  form, set, course, finalAmt, discount, discountAmt, screenshot, setScreenshot,
+  form, set, course, finalAmt, discount, discountAmt, screenshot, onFileSelected,
 }: {
   form: FormState;
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   course: { title: string; price: number };
   finalAmt: number; discount: number; discountAmt: number;
   screenshot: string | null;
-  setScreenshot: (s: string | null) => void;
+  onFileSelected: (file: File | null, preview: string | null) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const upiUrl = `upi://pay?pa=${SITE.upiId}&pn=${encodeURIComponent(SITE.short)}&am=${finalAmt}&cu=INR`;
@@ -338,10 +395,15 @@ function StepPayment({
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File too large (max 5 MB).");
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = () => setScreenshot(reader.result as string);
+    reader.onload = () => onFileSelected(file, reader.result as string);
     reader.readAsDataURL(file);
   };
+
 
   return (
     <div>
