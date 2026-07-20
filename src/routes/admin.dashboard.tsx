@@ -67,25 +67,25 @@ function AdminDashboard() {
       logoutTimer = setTimeout(async () => {
         await supabase.auth.signOut();
         toast.info("Signed out due to inactivity.");
-        navigate({ to: "/admin" });
+        window.location.replace("/admin");
       }, INACTIVITY_MS);
     };
 
     (async () => {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) { navigate({ to: "/admin" }); return; }
+      if (!data.user) { window.location.replace("/admin"); return; }
       try {
         const r = await getRoles();
         if (r.roles.length === 0) {
           await supabase.auth.signOut();
-          navigate({ to: "/admin" });
+          window.location.replace("/admin");
           return;
         }
         setRoles(r.roles);
         setAuthOk(true);
         reset();
       } catch {
-        navigate({ to: "/admin" });
+        window.location.replace("/admin");
       }
     })();
 
@@ -180,7 +180,7 @@ function AdminDashboard() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/admin" });
+    window.location.replace("/admin");
   };
 
   if (!authOk) {

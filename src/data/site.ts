@@ -1,7 +1,8 @@
-// Central mock data source. Admin panel would edit these via Cloud later.
-import courseYtAi from "@/assets/course-yt-ai.jpg";
-import courseMonetization from "@/assets/course-monetization.jpg";
-import courseShorts from "@/assets/course-shorts.jpg";
+// Central data source.
+import courseYtAi from "@/assets/AI_learning_platform_hero_banner_202607192308.jpeg";
+import courseMonetization from "@/assets/WhatsApp_Image_2026-07-20_at_6.34.08_AM.jpeg";
+import courseShorts from "@/assets/WhatsApp_Image_2026-07-20_at_6.34.08_AM_(1).jpeg";
+import courseGenerativeAi from "@/assets/Complete_YouTube_Master_Course_2K_202607200852.jpeg";
 import coursePlaceholder from "@/assets/course-placeholder.jpg";
 import galleryStudio from "@/assets/gallery-studio.jpg";
 import galleryClass from "@/assets/gallery-class.jpg";
@@ -12,8 +13,7 @@ export const SITE = {
   short: "Creator Lab",
   tagline: "Learn YouTube & Generative AI From Beginner To Professional",
   whatsappNumber: "916353504505",
-  whatsappMessage:
-    "Hello! I want to know more about Creator Lab courses.",
+  whatsappMessage: "Hello! I want to know more about Creator Lab courses.",
   supportEmail: "support@creatorlab.in",
   supportPhone: "+91 63535 04505",
   upiId: "6353504505@slc",
@@ -23,6 +23,7 @@ export const IMAGES = {
   courseYtAi,
   courseMonetization,
   courseShorts,
+  courseGenerativeAi,
   coursePlaceholder,
   galleryStudio,
   galleryClass,
@@ -110,7 +111,7 @@ export const COURSES: Course[] = [
   {
     id: "premium-monetization",
     title: "Premium Monetization Mentorship",
-    tagline: "1-on-1 mentorship for serious creators",
+    tagline: "1-on-1 mentorship for serious creators ready to scale",
     price: 24999,
     originalPrice: 39999,
     duration: "8–12 Months Support",
@@ -121,22 +122,52 @@ export const COURSES: Course[] = [
     thumbnail: courseMonetization,
     gallery: [galleryClass, galleryCertificate, galleryStudio],
     overview:
-      "A hands-on mentorship program for creators who want to scale beyond ₹1L/month with brand deals, digital products and multi-channel strategies.",
+      "The most comprehensive creator mentorship program in India. Built for serious creators who want to scale beyond ₹1L/month. Covers everything from complete YouTube setup and channel creation to advanced AI tools, SEO mastery, brand deals, digital product launches, and full channel automation — all with personalised 1-on-1 weekly mentor calls and a dedicated support team.",
     outcomes: [
-      "Scale to ₹1L+ / month sustainably",
-      "Land premium brand collaborations",
-      "Launch a digital product / course",
-      "Build a creator team & workflow",
+      "Complete YouTube Channel Setup & Branding from scratch",
+      "Facebook Lite setup, WhatsApp Business & Number Display configuration",
+      "Basic to Advanced Video Editing — mobile and PC workflows",
+      "AI Editing Workflow for faster, premium content",
+      "Full YouTube SEO: thumbnails, titles, descriptions, tags & hashtags",
+      "YouTube Studio mastery, copyright & community guidelines",
+      "Complete monetization process: AdSense, brand deals & digital products",
+      "Shorts & long-form content strategy that drives algorithmic growth",
+      "Free AI tools, viral content research & analytics deep-dive",
+      "Audience growth strategy, live streaming & upload workflow",
+      "Scale to ₹1L+ / month with sustainable revenue streams",
+      "Land premium brand collaborations with professional pitch decks",
+      "Launch a digital product or online course",
+      "Build a creator team & automate your workflow",
     ],
-    tools: ["ChatGPT Enterprise", "Notion", "Zapier", "Airtable", "Beehiiv"],
+    tools: [
+      "ChatGPT Enterprise", "Gemini", "Midjourney", "Runway", "CapCut",
+      "Premiere Pro", "Canva", "TubeBuddy", "VidIQ", "Notion",
+      "Zapier", "Airtable", "Beehiiv", "Facebook Lite", "WhatsApp Business",
+    ],
     syllabus: [
-      { week: "Month 1", topics: ["Business audit", "Revenue mapping"] },
-      { week: "Month 2–3", topics: ["Brand outreach systems", "Pitch decks"] },
-      { week: "Month 4–6", topics: ["Digital product launch", "Sales funnels"] },
-      { week: "Month 7+", topics: ["Team building", "Automation & scale"] },
+      { week: "Month 1", topics: ["Complete YouTube Channel Setup", "Facebook Lite & WhatsApp Business setup", "Channel branding & positioning", "Business audit & revenue mapping"] },
+      { week: "Month 2–3", topics: ["Video Editing — Basic to Advanced", "AI Editing Workflow", "SEO: thumbnails, titles, descriptions, tags", "Hashtag & viral content strategy"] },
+      { week: "Month 4–5", topics: ["YouTube Studio deep-dive", "Copyright, community guidelines & monetization", "Shorts & long-form content strategy", "Analytics & audience growth", "Brand outreach systems & pitch decks"] },
+      { week: "Month 6–7", topics: ["AI Tools for YouTube & free AI toolkit", "Viral content research", "Live streaming & upload workflow", "Digital product launch & sales funnels"] },
+      { week: "Month 8+", topics: ["Backup & security tips", "Team building & workflow automation", "Scaling to ₹1L+ per month", "Long-term brand partnerships & licensing"] },
     ],
-    schedule: "1:1 weekly calls + group masterminds",
-    batchStart: "Rolling admissions",
+    schedule: "1:1 weekly mentor calls + group masterminds",
+    batchStart: "Rolling admissions — apply now",
+    includes: [
+      "1:1 Weekly Mentor Calls",
+      "121+ Live Group Sessions",
+      "Recorded Sessions — Lifetime Access",
+      "Doubt Clearing Sessions",
+      "Full Team WhatsApp Support",
+      "Regular Curriculum Updates",
+      "Step-by-Step Practical Projects",
+      "Free AI Tools Toolkit",
+      "YouTube Monetization Guidance",
+      "Brand Deal Templates & Pitch Decks",
+      "Digital Product Launch Playbook",
+      "Verified Certificate on Completion",
+      "Premium Learning Experience",
+    ],
   },
   {
     id: "generative-ai-master",
@@ -146,7 +177,7 @@ export const COURSES: Course[] = [
     duration: "TBA",
     support: "TBA",
     status: "coming-soon",
-    thumbnail: courseShorts,
+    thumbnail: courseGenerativeAi,
     gallery: [],
     overview: "",
     outcomes: [],
@@ -163,7 +194,7 @@ export const COURSES: Course[] = [
     duration: "TBA",
     support: "TBA",
     status: "coming-soon",
-    thumbnail: coursePlaceholder,
+    thumbnail: courseShorts,
     gallery: [],
     overview: "",
     outcomes: [],
@@ -276,10 +307,10 @@ export const COURSES: Course[] = [
   },
 ];
 
-// Banner slides for homepage carousel. Admin can replace placeholders later.
+// Banner slides for homepage carousel
 export type Banner = {
   id: string;
-  courseId?: string; // click leads to /courses/:id if set
+  courseId?: string;
   image: string;
   title: string;
   description: string;
@@ -294,7 +325,7 @@ export const BANNERS: Banner[] = [
     id: "b1",
     courseId: "yt-ai-master",
     image: courseYtAi,
-    title: "YouTube AI Creator Master Program",
+    title: "YouTube All Creator Master Program",
     description: "Beginner-to-pro system with live mentorship, AI tools & monetization.",
     price: "₹9,999",
     seatsBadge: "Only 12 Seats Left",
@@ -313,28 +344,12 @@ export const BANNERS: Banner[] = [
   {
     id: "b3",
     courseId: "generative-ai-master",
-    image: courseShorts,
+    image: courseGenerativeAi,
     title: "Generative AI Master Program",
     description: "Master generative AI for content creation. Batch launching soon.",
     price: "Coming Soon",
     seatsBadge: "Join Waitlist",
     ctaLabel: "Notify Me",
-  },
-  {
-    id: "b4",
-    image: coursePlaceholder,
-    title: "Your Next Course Here",
-    description: "Placeholder banner — admin can replace with any new course.",
-    ctaLabel: "Coming Soon",
-    isPlaceholder: true,
-  },
-  {
-    id: "b5",
-    image: coursePlaceholder,
-    title: "Your Next Course Here",
-    description: "Placeholder banner — admin can replace with any new course.",
-    ctaLabel: "Coming Soon",
-    isPlaceholder: true,
   },
 ];
 

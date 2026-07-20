@@ -95,14 +95,14 @@ export function CoursesSection() {
               style={{ background: "var(--gradient-brand)" }}
             >
               <div className="relative rounded-[calc(1.5rem-1.5px)] bg-card flex flex-col overflow-hidden h-full hover-glow-gold">
-                <div className="relative aspect-video overflow-hidden">
+                <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
                   <img
                     src={c.thumbnail}
                     alt={c.title}
                     loading="lazy"
                     width={1280}
-                    height={720}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    height={800}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
 
