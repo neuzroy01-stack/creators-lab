@@ -1,10 +1,14 @@
 import { createFileRoute, useNavigate, Link, notFound } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { COURSES, SITE } from "@/data/site";
+import { supabase } from "@/integrations/supabase/client";
+import { submitRegistration } from "@/lib/registrations.functions";
 import {
   ArrowLeft, ArrowRight, Check, Copy, Upload, User, GraduationCap,
-  BookOpen, ClipboardCheck, CreditCard,
+  BookOpen, ClipboardCheck, CreditCard, Loader2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/enroll/$courseId")({
