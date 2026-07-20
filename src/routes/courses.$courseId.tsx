@@ -109,13 +109,13 @@ function CourseDetail() {
               Purchase Now <ArrowRight className="h-4 w-4" />
             </Link>
             <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {[
+              {(course.includes ?? [
                 "Live Microsoft Teams classes",
                 "Lifetime recording access",
                 "Certificate on completion",
                 "24×7 WhatsApp support",
                 "7-day money-back guarantee",
-              ].map((t) => (
+              ]).map((t) => (
                 <div key={t} className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-success" /> {t}
                 </div>
@@ -154,6 +154,27 @@ function CourseDetail() {
                 <div key={i} className="group relative aspect-video rounded-2xl overflow-hidden glass-strong">
                   <img src={src} alt={`${course.title} gallery ${i + 1}`} loading="lazy" width={1280} height={720}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Course Includes */}
+      {course.includes && course.includes.length > 0 && (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4">
+            <h2 className="text-2xl md:text-3xl font-bold">Course includes</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Everything you get when you join this program.</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {course.includes.map((inc: string) => (
+                <div key={inc} className="flex items-center gap-3 rounded-2xl glass p-4">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
+                    style={{ background: "var(--gradient-brand)" }}>
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-sm font-medium">{inc}</div>
                 </div>
               ))}
             </div>
