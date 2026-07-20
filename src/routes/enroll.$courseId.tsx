@@ -200,8 +200,11 @@ function EnrollPage() {
                   finalAmt={finalAmt}
                   discount={discount}
                   discountAmt={discountAmt}
-                  screenshot={screenshot}
-                  setScreenshot={setScreenshot}
+                  screenshot={screenshotPreview}
+                  onFileSelected={(file, preview) => {
+                    setScreenshotFile(file);
+                    setScreenshotPreview(preview);
+                  }}
                 />
               )}
             </motion.div>
@@ -210,7 +213,7 @@ function EnrollPage() {
           <div className="mt-8 flex items-center justify-between gap-3">
             <button
               onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0}
+              disabled={step === 0 || submitting}
               className="rounded-xl glass px-5 py-3 text-sm font-semibold disabled:opacity-40"
             >
               ← Back
@@ -227,11 +230,11 @@ function EnrollPage() {
             ) : (
               <button
                 onClick={onSubmit}
-                disabled={!canNext()}
-                className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-brand disabled:opacity-40"
+                disabled={!canNext() || submitting}
+                className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-brand disabled:opacity-40 inline-flex items-center gap-2"
                 style={{ background: "var(--gradient-brand)" }}
               >
-                Submit Payment <Check className="inline h-4 w-4 ml-1" />
+                {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>) : (<>Submit Payment <Check className="h-4 w-4" /></>)}
               </button>
             )}
           </div>
