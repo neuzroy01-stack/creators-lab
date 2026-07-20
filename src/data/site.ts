@@ -375,9 +375,9 @@ export const FEATURES = [
 export const DEMO_VIDEOS = [
   {
     id: "d1",
-    title: "How AI is changing YouTube in 2026",
-    desc: "A quick walkthrough of the AI creator stack we teach.",
-    youtubeId: "7y1n6A0A7VU",
+    title: "YouTube Creator Master Program | Complete YouTube & Social Media Course | Live + Recorded + Monetization Support",
+    desc: "A quick walkthrough of the YouTube Creator Master Program",
+    youtubeId: "r9ScCE3iW_o",
   },
   {
     id: "d2",
