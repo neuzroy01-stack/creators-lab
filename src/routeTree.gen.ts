@@ -13,10 +13,12 @@ import { Route as SuccessRouteImport } from './routes/success'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as EnrollCourseIdRouteImport } from './routes/enroll.$courseId'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
@@ -36,6 +38,11 @@ const HelpRoute = HelpRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -58,23 +65,32 @@ const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
   path: '/courses/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/success': typeof SuccessRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/enroll/$courseId': typeof EnrollCourseIdRoute
   '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/success': typeof SuccessRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/enroll/$courseId': typeof EnrollCourseIdRoute
   '/courses': typeof CoursesIndexRoute
@@ -82,10 +98,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/success': typeof SuccessRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/enroll/$courseId': typeof EnrollCourseIdRoute
   '/courses/': typeof CoursesIndexRoute
@@ -94,30 +112,36 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/help'
     | '/login'
     | '/success'
+    | '/admin/dashboard'
     | '/courses/$courseId'
     | '/enroll/$courseId'
     | '/courses/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/help'
     | '/login'
     | '/success'
+    | '/admin/dashboard'
     | '/courses/$courseId'
     | '/enroll/$courseId'
     | '/courses'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/help'
     | '/login'
     | '/success'
+    | '/admin/dashboard'
     | '/courses/$courseId'
     | '/enroll/$courseId'
     | '/courses/'
@@ -125,6 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
@@ -164,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -192,11 +224,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminDashboardRoute: typeof AdminDashboardRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDashboardRoute: AdminDashboardRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
