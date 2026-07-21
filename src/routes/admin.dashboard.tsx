@@ -365,6 +365,126 @@ function AdminDashboard() {
             </table>
           </div>
         </div>
+
+        {isSuperAdmin && <AdminAccountsPanel />}
+      </div>
+    </div>
+  );
+}
+
+function AdminAccountsPanel() {
+  const qc = useQueryClient();
+  const list = useServerFn(adminListAdmins);
+  const create = useServerFn(adminCreateAccount);
+  const remove = useServerFn(adminRemoveAccount);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"super_admin" | "payment_manager" | "support">("support");
+  const [busy, setBusy] = useState(false);
+
+  const q = useQuery({
+    queryKey: ["admin", "admins"],
+    queryFn: async () => (await list()).admins,
+  });
+
+  const onCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    setBusy(true);
+    try {
+      await create({ data: { email: email.trim(), password, role } });
+      toast.success("Admin account created.");
+      setEmail(""); setPassword(""); setRole("support");
+      qc.invalidateQueries({ queryKey: ["admin", "admins"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to create admin.");
+    } finally { setBusy(false); }
+  };
+
+  const onRemove = async (userId: string, email: string | null) => {
+    if (!confirm(`Remove admin ${email ?? userId}? This deletes the user account.`)) return;
+    try {
+      await remove({ data: { userId } });
+      toast.success("Admin removed.");
+      qc.invalidateQueries({ queryKey: ["admin", "admins"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to remove admin.");
+    }
+  };
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-xl md:text-2xl font-bold mb-4">Admin accounts</h2>
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+        <form onSubmit={onCreate} className="rounded-2xl glass-strong p-6 space-y-3">
+          <div className="text-sm font-semibold mb-2">Create new admin</div>
+          <input
+            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email" autoComplete="off"
+            className="w-full rounded-xl glass px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-neon/60"
+          />
+          <input
+            type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password (min 8 chars)" autoComplete="new-password"
+            className="w-full rounded-xl glass px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-neon/60"
+          />
+          <select
+            value={role} onChange={(e) => setRole(e.target.value as typeof role)}
+            className="w-full rounded-xl glass px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-neon/60"
+          >
+            <option value="support">Support (view only)</option>
+            <option value="payment_manager">Payment Manager</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+          <button
+            type="submit" disabled={busy}
+            className="w-full rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-brand disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            style={{ background: "var(--gradient-brand)" }}
+          >
+            {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</> : "Create admin"}
+          </button>
+        </form>
+
+        <div className="rounded-2xl glass-strong overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase tracking-widest text-muted-foreground bg-white/[0.02]">
+              <tr>
+                <th className="text-left px-4 py-3">Email</th>
+                <th className="text-left px-4 py-3">Role</th>
+                <th className="text-left px-4 py-3">Created</th>
+                <th className="text-right px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {q.isLoading && (
+                <tr><td colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…
+                </td></tr>
+              )}
+              {q.data?.map((a) => (
+                <tr key={a.id} className="border-t border-white/5">
+                  <td className="px-4 py-3">{a.email ?? <span className="text-muted-foreground">—</span>}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-neon/15 text-neon px-2.5 py-1 text-xs font-medium">{a.role}</span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => onRemove(a.user_id, a.email)}
+                      className="rounded-lg glass p-2 hover:bg-destructive/20 hover:text-destructive"
+                      title="Remove admin"
+                    ><Trash2 className="h-3.5 w-3.5" /></button>
+                  </td>
+                </tr>
+              ))}
+              {q.data && q.data.length === 0 && (
+                <tr><td colSpan={4} className="text-center py-8 text-muted-foreground">No admins yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
