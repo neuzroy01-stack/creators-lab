@@ -7,7 +7,7 @@ import {
   Shield, Loader2, Mail, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, UserPlus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { anyAdminExists, bootstrapFirstAdmin } from "@/lib/registrations.functions";
+import { anyAdminExists } from "@/lib/registrations.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/admin")({
 
 function AdminLogin() {
   const checkAdmins = useServerFn(anyAdminExists);
-  const bootstrap = useServerFn(bootstrapFirstAdmin);
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -115,21 +114,13 @@ function AdminLogin() {
             return;
           }
         }
-        const result = await bootstrap();
-        if (!result.ok) {
-          await supabase.auth.signOut();
-          setError(result.message ?? "Bootstrap failed.");
-          setLoading(false);
-          submittingRef.current = false;
-          return;
-        }
-        setSuccess(true);
-        toast.success("Super admin created!");
-        setTimeout(() => window.location.replace("/admin/dashboard"), 600);
+        // Dynamic admin creation is disabled — admins are provisioned via database.
+        // This path should never be reached since anyAdminExists returns true when admins exist.
+        setError("Admin creation is disabled. Contact the database administrator to provision accounts.");
+        setLoading(false);
+        submittingRef.current = false;
         return;
       }
-
-      // Sign in
       const { data, error: authErr } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,

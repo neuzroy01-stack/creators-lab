@@ -17,43 +17,38 @@ const submitSchema = z.object({
 export const submitRegistration = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => submitSchema.parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    // Prevent duplicate submissions (same mobile + course)
-    const { data: existing } = await supabaseAdmin
-      .from("registrations")
-      .select("id, student_code, status")
-      .eq("mobile", data.mobile)
-      .eq("course_id", data.courseId)
-      .maybeSingle();
-    if (existing) {
-      return {
-        ok: false as const,
-        error: "duplicate",
-        message: `You already have a registration for this course (${existing.student_code ?? existing.id}). Contact us on WhatsApp for help.`,
-      };
+    // Uses a SECURITY DEFINER SQL function — no service role key needed.
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+    if (!url || !key) {
+      return { ok: false as const, error: "config", message: "Server is not configured. Please try again later." };
     }
-
-    const { data: row, error } = await supabaseAdmin
-      .from("registrations")
-      .insert({
-        full_name: data.fullName,
-        mobile: data.mobile,
-        email: data.email.toLowerCase(),
-        course_id: data.courseId,
-        course_title: data.courseTitle,
-        amount: data.amount,
-        utr: data.utr,
-        screenshot_path: data.screenshotPath ?? null,
-        remarks: data.remarks ?? null,
-        status: "pending",
-      })
-      .select("id, student_code")
-      .single();
-
-    if (error) {
-      console.error("submitRegistration error:", error);
+    const res = await fetch(`${url}/rest/v1/rpc/submit_registration`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        p_full_name: data.fullName,
+        p_mobile: data.mobile,
+        p_email: data.email.toLowerCase(),
+        p_course_id: data.courseId,
+        p_course_title: data.courseTitle,
+        p_amount: data.amount,
+        p_utr: data.utr,
+        p_screenshot_path: data.screenshotPath ?? null,
+        p_remarks: data.remarks ?? null,
+      }),
+    });
+    if (!res.ok) {
+      console.error("submitRegistration HTTP error:", res.status, await res.text());
       return { ok: false as const, error: "insert_failed", message: "Could not save registration. Please try again." };
+    }
+    const rows = await res.json() as Array<{ id: string; student_code: string | null; error: string | null }>;
+    const row = rows?.[0];
+    if (!row) {
+      return { ok: false as const, error: "insert_failed", message: "Could not save registration. Please try again." };
+    }
+    if (row.error) {
+      return { ok: false as const, error: "duplicate", message: row.error.replace(/^duplicate:\s*/, "") };
     }
     return { ok: true as const, id: row.id, code: row.student_code! };
   });
@@ -162,8 +157,7 @@ export const adminGetProofUrl = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ path: z.string().min(1).max(500) }).parse(i))
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: signed, error } = await supabaseAdmin.storage
+    const { data: signed, error } = await context.supabase.storage
       .from("payment-proofs")
       .createSignedUrl(data.path, 300);
     if (error) throw new Error(error.message);
@@ -182,125 +176,27 @@ export const currentUserRoles = createServerFn({ method: "GET" })
 // ---------- Admin bootstrap & admin-account management ----------
 
 export const anyAdminExists = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { count, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("id", { count: "exact", head: true });
-  if (error) throw new Error(error.message);
-  return { exists: (count ?? 0) > 0 };
-});
-
-// If no admins exist, promote the currently signed-in user to super_admin.
-export const bootstrapFirstAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count, error: cErr } = await supabaseAdmin
-      .from("user_roles")
-      .select("id", { count: "exact", head: true });
-    if (cErr) throw new Error(cErr.message);
-    if ((count ?? 0) > 0) {
-      return { ok: false as const, message: "Admin accounts already exist. Contact your super admin." };
-    }
-    const { error } = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: context.userId, role: "super_admin" });
-    if (error) throw new Error(error.message);
-    return { ok: true as const };
+  // Uses a SECURITY DEFINER SQL function — no service role key needed.
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) return { exists: true }; // assume admins exist if env is missing
+  const res = await fetch(`${url}/rest/v1/rpc/any_admin_exists`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
+    body: "{}",
   });
+  if (!res.ok) return { exists: true }; // fail safe — don't show bootstrap
+  const exists = await res.json();
+  return { exists: exists === true };
+});
 
 export const adminListAdmins = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const roles = await requireAdmin(context.supabase, context.userId);
     if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: roleRows, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("id, user_id, role, created_at")
-      .order("created_at", { ascending: false });
+    // Uses a SECURITY DEFINER SQL function — no service role key needed.
+    const { data, error } = await context.supabase.rpc("list_admin_accounts");
     if (error) throw new Error(error.message);
-    const results: Array<{ id: string; user_id: string; role: string; email: string | null; created_at: string }> = [];
-    for (const r of roleRows ?? []) {
-      const { data: u } = await supabaseAdmin.auth.admin.getUserById(r.user_id);
-      results.push({ ...r, email: u?.user?.email ?? null });
-    }
-    return { admins: results };
-  });
-
-const createAdminSchema = z.object({
-  email: z.string().trim().email().max(255),
-  password: z.string().min(8).max(72),
-  role: z.enum(["super_admin", "payment_manager", "support"]),
-});
-
-export const adminCreateAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => createAdminSchema.parse(i))
-  .handler(async ({ data, context }) => {
-    const roles = await requireAdmin(context.supabase, context.userId);
-    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email.toLowerCase(),
-      password: data.password,
-      email_confirm: true,
-    });
-    if (error || !created.user) throw new Error(error?.message ?? "Failed to create user");
-    const { error: rErr } = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: created.user.id, role: data.role });
-    if (rErr) throw new Error(rErr.message);
-    return { ok: true, userId: created.user.id };
-  });
-
-export const adminRemoveAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
-  .handler(async ({ data, context }) => {
-    const roles = await requireAdmin(context.supabase, context.userId);
-    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
-    if (data.userId === context.userId) throw new Error("You cannot remove yourself.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-const updateRoleSchema = z.object({
-  userId: z.string().uuid(),
-  role: z.enum(["super_admin", "payment_manager", "support"]),
-});
-
-export const adminUpdateRole = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => updateRoleSchema.parse(i))
-  .handler(async ({ data, context }) => {
-    const roles = await requireAdmin(context.supabase, context.userId);
-    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
-    if (data.userId === context.userId) throw new Error("You cannot change your own role.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("user_roles")
-      .update({ role: data.role })
-      .eq("user_id", data.userId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-const resetPasswordSchema = z.object({
-  userId: z.string().uuid(),
-});
-
-export const adminResetPassword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => resetPasswordSchema.parse(i))
-  .handler(async ({ data, context }) => {
-    const roles = await requireAdmin(context.supabase, context.userId);
-    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: linkData, error } = await supabaseAdmin.auth.admin.generateRecoveryLink(data.userId, "recovery");
-    if (error) throw new Error(error.message);
-    return { ok: true, link: linkData.properties?.action_link ?? null };
+    return { admins: (data ?? []) as Array<{ id: string; user_id: string; role: string; email: string | null; created_at: string }> };
   });
