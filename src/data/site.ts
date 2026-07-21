@@ -376,8 +376,8 @@ export const DEMO_VIDEOS = [
   {
     id: "d1",
     title: "YouTube Creator Master Program | Complete YouTube & Social Media Course | Live + Recorded + Monetization Support",
-    desc: "A quick walkthrough of the YouTube Creator Master Program",
-    youtubeId: "7y1n6A0A7VU",
+    desc: "A quick walkthrough of the YouTube Creator Master Program Live session, recorded classes, Live Doubt session",
+    youtubeId: "r9ScCE3iW_o",
   },
   {
     id: "d2",
@@ -389,7 +389,7 @@ export const DEMO_VIDEOS = [
     id: "d3",
     title: "Student success: 0 to 100K in 6 months",
     desc: "Meet Ananya and her channel journey.",
-    youtubeId: "er8zzms30kA",
+    youtubeId: "r9ScCE3iW_o",
   },
 ];
 
