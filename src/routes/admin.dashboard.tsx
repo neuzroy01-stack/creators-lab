@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   adminListRegistrations, adminStats, adminUpdateStatus,
   adminDeleteRegistration, adminGetProofUrl,
+  adminListAdmins, adminCreateAccount, adminRemoveAccount,
 } from "@/lib/registrations.functions";
 
 export const Route = createFileRoute("/admin/dashboard")({
