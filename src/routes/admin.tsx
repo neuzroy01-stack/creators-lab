@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
-  Shield, Loader2, Mail, Lock, Eye, EyeOff, CheckCircle2, AlertCircle,
+  Shield, Loader2, Mail, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, UserPlus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { anyAdminExists, bootstrapFirstAdmin } from "@/lib/registrations.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -18,21 +20,25 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLogin() {
+  const checkAdmins = useServerFn(anyAdminExists);
+  const bootstrap = useServerFn(bootstrapFirstAdmin);
+
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [needsBootstrap, setNeedsBootstrap] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const submittingRef = useRef(false);
 
-  // If already authenticated and admin → redirect immediately via hard nav
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        // If already signed in with a role, redirect straight to dashboard
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
           const { data: roles } = await supabase
@@ -44,13 +50,23 @@ function AdminLogin() {
             return;
           }
         }
+        // Check whether the very first admin still needs to be created
+        try {
+          const r = await checkAdmins();
+          if (!cancelled) {
+            setNeedsBootstrap(!r.exists);
+            if (!r.exists) setMode("signup");
+          }
+        } catch {
+          /* ignore */
+        }
       } catch {
-        // network error — show login anyway
+        /* show login anyway */
       }
       if (!cancelled) setChecking(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [checkAdmins]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,19 +76,72 @@ function AdminLogin() {
     setError(null);
 
     try {
+      if (mode === "signup") {
+        if (!needsBootstrap) {
+          setError("Admin accounts already exist. Please sign in instead.");
+          setMode("signin");
+          setLoading(false);
+          submittingRef.current = false;
+          return;
+        }
+        if (password.length < 8) {
+          setError("Password must be at least 8 characters.");
+          setLoading(false);
+          submittingRef.current = false;
+          return;
+        }
+        // Sign up first super admin
+        const { data: signUp, error: suErr } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/admin` },
+        });
+        if (suErr) {
+          setError(suErr.message);
+          setLoading(false);
+          submittingRef.current = false;
+          return;
+        }
+        // If email confirmation is required, session will be null — try password sign-in
+        if (!signUp.session) {
+          const { error: siErr } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
+          if (siErr) {
+            setError("Account created but sign-in failed. Please try signing in.");
+            setLoading(false);
+            submittingRef.current = false;
+            return;
+          }
+        }
+        const result = await bootstrap();
+        if (!result.ok) {
+          await supabase.auth.signOut();
+          setError(result.message ?? "Bootstrap failed.");
+          setLoading(false);
+          submittingRef.current = false;
+          return;
+        }
+        setSuccess(true);
+        toast.success("Super admin created!");
+        setTimeout(() => window.location.replace("/admin/dashboard"), 600);
+        return;
+      }
+
+      // Sign in
       const { data, error: authErr } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
       });
 
       if (authErr || !data.user) {
-        setError(authErr?.message ?? "Invalid email or password. Please try again.");
+        setError(authErr?.message ?? "Invalid email or password.");
         setLoading(false);
         submittingRef.current = false;
         return;
       }
 
-      // Verify admin role
       const { data: roles, error: roleErr } = await supabase
         .from("user_roles")
         .select("role")
@@ -88,13 +157,10 @@ function AdminLogin() {
 
       setSuccess(true);
       toast.success("Signed in successfully!");
-
-      // Hard navigation avoids TanStack Router SSR hydration loop
-      setTimeout(() => {
-        window.location.replace("/admin/dashboard");
-      }, 600);
+      setTimeout(() => window.location.replace("/admin/dashboard"), 600);
     } catch (err) {
-      setError("Network error. Please check your connection and try again.");
+      console.error(err);
+      setError("Network error. Please try again.");
       setLoading(false);
       submittingRef.current = false;
     }
@@ -116,7 +182,6 @@ function AdminLogin() {
       className="min-h-screen grid place-items-center px-4 py-16 relative overflow-hidden"
       style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.25 0.08 260 / 0.5), transparent)" }}
     >
-      {/* Ambient blobs */}
       <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full blur-[120px] opacity-20"
         style={{ background: "var(--gradient-brand)" }} />
       <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full blur-[120px] opacity-15"
@@ -128,9 +193,7 @@ function AdminLogin() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        {/* Header card */}
         <div className="rounded-3xl glass-strong p-8 border border-white/10 shadow-2xl">
-          {/* Brand mark */}
           <div className="flex flex-col items-center text-center mb-8">
             <div
               className="h-16 w-16 rounded-2xl grid place-items-center mb-4 shadow-brand"
@@ -139,14 +202,17 @@ function AdminLogin() {
               <Shield className="h-7 w-7 text-white" />
             </div>
             <div className="text-xs tracking-widest uppercase text-muted-foreground mb-1">Creator Lab</div>
-            <h1 className="text-2xl font-bold">Staff Console</h1>
+            <h1 className="text-2xl font-bold">
+              {mode === "signup" ? "Create Super Admin" : "Staff Console"}
+            </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Authorized personnel only. All access is monitored.
+              {mode === "signup"
+                ? "Set up the first admin account. This is a one-time step."
+                : "Authorized personnel only. All access is monitored."}
             </p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
-            {/* Error/Success banner */}
             <AnimatePresence>
               {error && (
                 <motion.div
@@ -166,12 +232,11 @@ function AdminLogin() {
                   className="flex items-center gap-3 rounded-xl bg-success/10 border border-success/20 px-4 py-3 text-sm text-success"
                 >
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  Signed in! Redirecting to dashboard…
+                  {mode === "signup" ? "Admin created! Redirecting…" : "Signed in! Redirecting…"}
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Email field */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                 Email address
@@ -186,15 +251,14 @@ function AdminLogin() {
                   autoComplete="email"
                   disabled={loading || success}
                   placeholder="admin@creatorlab.in"
-                  className="w-full rounded-xl glass pl-10 pr-4 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-neon/60 focus:border-neon/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl glass pl-10 pr-4 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-neon/60 focus:border-neon/40 disabled:opacity-50"
                 />
               </div>
             </div>
 
-            {/* Password field */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Password
+                Password {mode === "signup" && <span className="text-muted-foreground/70">(min 8 chars)</span>}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -203,11 +267,11 @@ function AdminLogin() {
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   required
-                  minLength={6}
-                  autoComplete="current-password"
+                  minLength={mode === "signup" ? 8 : 6}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
                   disabled={loading || success}
                   placeholder="••••••••"
-                  className="w-full rounded-xl glass pl-10 pr-12 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-neon/60 focus:border-neon/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl glass pl-10 pr-12 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-neon/60 focus:border-neon/40 disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -220,36 +284,6 @@ function AdminLogin() {
               </div>
             </div>
 
-            {/* Remember me + Forgot password */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-                <div
-                  onClick={() => setRememberMe((v) => !v)}
-                  className={`h-4 w-4 rounded border transition-all cursor-pointer ${
-                    rememberMe
-                      ? "border-transparent"
-                      : "border-white/20 bg-white/5"
-                  }`}
-                  style={rememberMe ? { background: "var(--gradient-brand)" } : undefined}
-                >
-                  {rememberMe && (
-                    <svg viewBox="0 0 12 12" className="h-full w-full text-white p-0.5">
-                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
-                <span className="text-xs">Remember me</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => toast.info("Contact your Super Admin to reset your password.")}
-                className="text-xs text-neon hover:underline"
-              >
-                Forgot password?
-              </button>
-            </div>
-
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading || success || !email || !password}
@@ -257,22 +291,32 @@ function AdminLogin() {
               style={{ background: "var(--gradient-brand)" }}
             >
               {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Signing in…
-                </>
+                <><Loader2 className="h-4 w-4 animate-spin" /> {mode === "signup" ? "Creating…" : "Signing in…"}</>
               ) : success ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Redirecting…
-                </>
+                <><CheckCircle2 className="h-4 w-4" /> Redirecting…</>
+              ) : mode === "signup" ? (
+                <><UserPlus className="h-4 w-4" /> Create Super Admin</>
               ) : (
                 "Sign in to Console"
               )}
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-white/5 text-center">
+          <div className="mt-6 pt-5 border-t border-white/5 text-center space-y-2">
+            {needsBootstrap && (
+              <div className="text-xs text-gold">
+                First-time setup: create the initial super admin.
+              </div>
+            )}
+            {!needsBootstrap && (
+              <button
+                type="button"
+                onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                {/* Only sign-in is allowed after bootstrap — no self-serve signup */}
+              </button>
+            )}
             <p className="text-[11px] text-muted-foreground">
               Unauthorized access is strictly prohibited and monitored. All activity is logged.
             </p>
