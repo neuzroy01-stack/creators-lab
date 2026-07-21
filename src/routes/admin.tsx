@@ -159,8 +159,14 @@ function AdminLogin() {
       toast.success("Signed in successfully!");
       setTimeout(() => window.location.replace("/admin/dashboard"), 600);
     } catch (err) {
-      console.error(err);
-      setError("Network error. Please try again.");
+      console.error("Admin login error:", err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "Network error. Please try again later.";
+      setError(msg);
       setLoading(false);
       submittingRef.current = false;
     }

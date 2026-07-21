@@ -22,7 +22,7 @@ export function FloatingWhatsApp() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed right-4 md:right-6 bottom-24 md:bottom-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed right-4 md:right-6 bottom-24 md:bottom-6 z-50 hidden md:flex flex-col items-end gap-3">
       <AnimatePresence>
         {open && (
           <motion.div
