@@ -267,3 +267,40 @@ export const adminRemoveAccount = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const updateRoleSchema = z.object({
+  userId: z.string().uuid(),
+  role: z.enum(["super_admin", "payment_manager", "support"]),
+});
+
+export const adminUpdateRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => updateRoleSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    const roles = await requireAdmin(context.supabase, context.userId);
+    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
+    if (data.userId === context.userId) throw new Error("You cannot change your own role.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .update({ role: data.role })
+      .eq("user_id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const resetPasswordSchema = z.object({
+  userId: z.string().uuid(),
+});
+
+export const adminResetPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => resetPasswordSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    const roles = await requireAdmin(context.supabase, context.userId);
+    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: linkData, error } = await supabaseAdmin.auth.admin.generateRecoveryLink(data.userId, "recovery");
+    if (error) throw new Error(error.message);
+    return { ok: true, link: linkData.properties?.action_link ?? null };
+  });

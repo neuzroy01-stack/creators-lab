@@ -1,3 +1,27 @@
+// Load .env into process.env for server-side code (Nitro/Vite only injects VITE_* vars).
+// Must run before any module that reads process.env.SUPABASE_*.
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+try {
+  const envPath = resolve(process.cwd(), ".env");
+  const raw = readFileSync(envPath, "utf8");
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!(key in process.env)) process.env[key] = val;
+  }
+} catch {
+  // .env may not exist in some deployments — env vars come from the platform.
+}
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";

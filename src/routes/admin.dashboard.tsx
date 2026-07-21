@@ -6,13 +6,14 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Users, TrendingUp, CheckCircle2, Clock, XCircle, IndianRupee,
-  Search, Download, LogOut, Eye, Trash2, RefreshCw, Loader2, ShieldCheck,
+  Search, Download, LogOut, Eye, Trash2, RefreshCw, Loader2, ShieldCheck, KeyRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   adminListRegistrations, adminStats, adminUpdateStatus,
   adminDeleteRegistration, adminGetProofUrl,
   adminListAdmins, adminCreateAccount, adminRemoveAccount,
+  adminUpdateRole, adminResetPassword,
 } from "@/lib/registrations.functions";
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -377,6 +378,8 @@ function AdminAccountsPanel() {
   const list = useServerFn(adminListAdmins);
   const create = useServerFn(adminCreateAccount);
   const remove = useServerFn(adminRemoveAccount);
+  const updateRole = useServerFn(adminUpdateRole);
+  const resetPwd = useServerFn(adminResetPassword);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -411,6 +414,30 @@ function AdminAccountsPanel() {
       qc.invalidateQueries({ queryKey: ["admin", "admins"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to remove admin.");
+    }
+  };
+
+  const onRoleChange = async (userId: string, newRole: "super_admin" | "payment_manager" | "support") => {
+    try {
+      await updateRole({ data: { userId, role: newRole } });
+      toast.success("Role updated.");
+      qc.invalidateQueries({ queryKey: ["admin", "admins"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update role.");
+    }
+  };
+
+  const onResetPwd = async (userId: string, email: string | null) => {
+    if (!confirm(`Send password reset email to ${email ?? userId}?`)) return;
+    try {
+      const res = await resetPwd({ data: { userId } });
+      if (res.link) {
+        toast.success("Recovery link generated.");
+      } else {
+        toast.success("Password reset email sent.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reset password.");
     }
   };
 
@@ -454,12 +481,13 @@ function AdminAccountsPanel() {
                 <th className="text-left px-4 py-3">Email</th>
                 <th className="text-left px-4 py-3">Role</th>
                 <th className="text-left px-4 py-3">Created</th>
+                <th className="text-left px-4 py-3">Change Role</th>
                 <th className="text-right px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {q.isLoading && (
-                <tr><td colSpan={4} className="text-center py-8 text-muted-foreground">
+                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…
                 </td></tr>
               )}
@@ -470,17 +498,35 @@ function AdminAccountsPanel() {
                     <span className="rounded-full bg-neon/15 text-neon px-2.5 py-1 text-xs font-medium">{a.role}</span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={a.role}
+                      onChange={(e) => onRoleChange(a.user_id, e.target.value as "super_admin" | "payment_manager" | "support")}
+                      className="rounded-lg glass px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-neon/60"
+                    >
+                      <option value="support">Support</option>
+                      <option value="payment_manager">Payment Manager</option>
+                      <option value="super_admin">Super Admin</option>
+                    </select>
+                  </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => onRemove(a.user_id, a.email)}
-                      className="rounded-lg glass p-2 hover:bg-destructive/20 hover:text-destructive"
-                      title="Remove admin"
-                    ><Trash2 className="h-3.5 w-3.5" /></button>
+                    <div className="flex items-center gap-1 justify-end">
+                      <button
+                        onClick={() => onResetPwd(a.user_id, a.email)}
+                        className="rounded-lg glass p-2 hover:bg-neon/20 hover:text-neon"
+                        title="Reset password"
+                      ><KeyRound className="h-3.5 w-3.5" /></button>
+                      <button
+                        onClick={() => onRemove(a.user_id, a.email)}
+                        className="rounded-lg glass p-2 hover:bg-destructive/20 hover:text-destructive"
+                        title="Remove admin"
+                      ><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {q.data && q.data.length === 0 && (
-                <tr><td colSpan={4} className="text-center py-8 text-muted-foreground">No admins yet.</td></tr>
+                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No admins yet.</td></tr>
               )}
             </tbody>
           </table>
