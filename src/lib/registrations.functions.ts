@@ -178,3 +178,92 @@ export const currentUserRoles = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { roles: (data ?? []).map((r) => r.role as string) };
   });
+
+// ---------- Admin bootstrap & admin-account management ----------
+
+export const anyAdminExists = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { count, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("id", { count: "exact", head: true });
+  if (error) throw new Error(error.message);
+  return { exists: (count ?? 0) > 0 };
+});
+
+// If no admins exist, promote the currently signed-in user to super_admin.
+export const bootstrapFirstAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { count, error: cErr } = await supabaseAdmin
+      .from("user_roles")
+      .select("id", { count: "exact", head: true });
+    if (cErr) throw new Error(cErr.message);
+    if ((count ?? 0) > 0) {
+      return { ok: false as const, message: "Admin accounts already exist. Contact your super admin." };
+    }
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: context.userId, role: "super_admin" });
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const adminListAdmins = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const roles = await requireAdmin(context.supabase, context.userId);
+    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: roleRows, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, role, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    const results: Array<{ id: string; user_id: string; role: string; email: string | null; created_at: string }> = [];
+    for (const r of roleRows ?? []) {
+      const { data: u } = await supabaseAdmin.auth.admin.getUserById(r.user_id);
+      results.push({ ...r, email: u?.user?.email ?? null });
+    }
+    return { admins: results };
+  });
+
+const createAdminSchema = z.object({
+  email: z.string().trim().email().max(255),
+  password: z.string().min(8).max(72),
+  role: z.enum(["super_admin", "payment_manager", "support"]),
+});
+
+export const adminCreateAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => createAdminSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    const roles = await requireAdmin(context.supabase, context.userId);
+    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email.toLowerCase(),
+      password: data.password,
+      email_confirm: true,
+    });
+    if (error || !created.user) throw new Error(error?.message ?? "Failed to create user");
+    const { error: rErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: created.user.id, role: data.role });
+    if (rErr) throw new Error(rErr.message);
+    return { ok: true, userId: created.user.id };
+  });
+
+export const adminRemoveAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const roles = await requireAdmin(context.supabase, context.userId);
+    if (!roles.includes("super_admin")) throw new Error("Forbidden: super admin only");
+    if (data.userId === context.userId) throw new Error("You cannot remove yourself.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
