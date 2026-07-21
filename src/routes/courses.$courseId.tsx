@@ -115,7 +115,7 @@ function CourseDetail() {
                 "Certificate on completion",
                 "24×7 WhatsApp support",
                 "7-day money-back guarantee",
-              ]).map((t) => (
+              ]).map((t: string) => (
                 <div key={t} className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-success" /> {t}
                 </div>
